@@ -14,13 +14,6 @@
   <description>Dapr Spring Data</description>
   <packaging>jar</packaging>
 
-  <dependencies>
-    <dependency>
-      <groupId>org.springframework.data</groupId>
-      <artifactId>spring-data-keyvalue</artifactId>
-    </dependency>
-  </dependencies>
-
   <build>
     <plugins>
       <plugin>
