@@ -1,7 +1,5 @@
 # Dapr Java SDK documentation
 
-This page covers how the documentation is structured for the Dapr Java SDK
-
 ## Dapr Docs
 
 All Dapr documentation is hosted at [docs.dapr.io](https://docs.dapr.io), including the docs for the [Java SDK](https://docs.dapr.io/developing-applications/sdks/java/). Head over there if you want to read the docs.
