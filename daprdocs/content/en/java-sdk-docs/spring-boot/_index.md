@@ -83,7 +83,7 @@ public class DaprTestContainersConfig {
   @ServiceConnection
   public DaprContainer daprContainer(Network daprNetwork, PostgreSQLContainer<?> postgreSQLContainer){
     
-    return new DaprContainer("daprio/daprd:1.15.4")
+    return new DaprContainer("daprio/daprd:1.15.7")
             .withAppName("producer-app")
             .withNetwork(daprNetwork)
             .withComponent(new Component("kvstore", "state.postgresql", "v1", STATE_STORE_PROPERTIES))
@@ -122,7 +122,7 @@ Besides the previous configuration (`DaprTestContainersConfig`) your tests shoul
 
 ## Leveraging Spring & Spring Boot programming model with Dapr
 
-The Java SDK allows you to interface with all of the [Dapr building blocks]({{< ref building-blocks >}}). 
+The Java SDK allows you to interface with all of the [Dapr building blocks]({{% ref building-blocks %}}). 
 But if you want to leverage the Spring and Spring Boot programming model you can use the `dapr-spring-boot-starter` integration. 
 This includes implementations of Spring Data (`KeyValueTemplate` and `CrudRepository`) as well as a `DaprMessagingTemplate` for producing and consuming messages 
 (similar to [Spring Kafka](https://spring.io/projects/spring-kafka), [Spring Pulsar](https://spring.io/projects/spring-pulsar) and [Spring AMQP for RabbitMQ](https://spring.io/projects/spring-amqp)) and Dapr workflows. 
@@ -238,7 +238,7 @@ Finally, because Dapr PubSub requires a bidirectional connection between your ap
 @ServiceConnection
 public DaprContainer daprContainer(Network daprNetwork, PostgreSQLContainer<?> postgreSQLContainer, RabbitMQContainer rabbitMQContainer){
     
-    return new DaprContainer("daprio/daprd:1.15.4")
+    return new DaprContainer("daprio/daprd:1.15.7")
             .withAppName("producer-app")
             .withNetwork(daprNetwork)
             .withComponent(new Component("kvstore", "state.postgresql", "v1", STATE_STORE_PROPERTIES))
