@@ -7,7 +7,7 @@
   <groupId>io.dapr</groupId>
   <artifactId>dapr-sdk-parent</artifactId>
   <packaging>pom</packaging>
-  <version>1.16.0-SNAPSHOT</version>
+  <version>1.17.0-SNAPSHOT</version>
   <name>dapr-sdk-parent</name>
   <description>SDK for Dapr.</description>
   <url>https://dapr.io</url>
@@ -16,10 +16,9 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <grpc.version>1.69.0</grpc.version>
     <protobuf.version>3.25.5</protobuf.version>
-    <protocCommand>protoc</protocCommand>
-    <dapr.proto.baseurl>https://raw.githubusercontent.com/dapr/dapr/v1.16.0-rc.3/dapr/proto</dapr.proto.baseurl>
-    <dapr.sdk.version>1.16.0-SNAPSHOT</dapr.sdk.version>
-    <dapr.sdk.alpha.version>0.16.0-SNAPSHOT</dapr.sdk.alpha.version>
+    <dapr.proto.baseurl>https://raw.githubusercontent.com/dapr/dapr/v1.16.0-rc.5/dapr/proto</dapr.proto.baseurl>
+    <dapr.sdk.version>1.17.0-SNAPSHOT</dapr.sdk.version>
+    <dapr.sdk.alpha.version>0.17.0-SNAPSHOT</dapr.sdk.alpha.version>
     <os-maven-plugin.version>1.7.1</os-maven-plugin.version>
     <maven-dependency-plugin.version>3.1.1</maven-dependency-plugin.version>
     <maven-antrun-plugin.version>1.8</maven-antrun-plugin.version>
@@ -43,7 +42,7 @@
     <spotbugs.fail>true</spotbugs.fail>
     <spotbugs.exclude.filter.file>../spotbugs-exclude.xml</spotbugs.exclude.filter.file>
     <argLine>--add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED</argLine>
-    <failsafe.version>3.2.2</failsafe.version>
+    <failsafe.version>3.5.3</failsafe.version>
     <surefire.version>3.2.2</surefire.version>
     <junit-bom.version>5.11.4</junit-bom.version>
     <snakeyaml.version>2.0</snakeyaml.version>
@@ -70,7 +69,7 @@
   <distributionManagement>
     <snapshotRepository>
       <id>ossrh</id>
-      <url>https://ossrh-staging-api.central.sonatype.com/content/repositories/snapshots</url>
+      <url>https://central.sonatype.com/repository/maven-snapshots/</url>
     </snapshotRepository>
     <site>
       <id>localDocsDirectory</id>
@@ -207,12 +206,12 @@
       <dependency>
         <groupId>io.dapr.spring</groupId>
         <artifactId>dapr-spring-boot-starter</artifactId>
-        <version>${dapr.sdk.alpha.version}</version>
+        <version>${dapr.sdk.version}</version>
       </dependency>
       <dependency>
         <groupId>io.dapr.spring</groupId>
         <artifactId>dapr-spring-boot-starter-test</artifactId>
-        <version>${dapr.sdk.alpha.version}</version>
+        <version>${dapr.sdk.version}</version>
       </dependency>
       <dependency>
         <groupId>org.springframework.boot</groupId>
@@ -247,7 +246,7 @@
       <dependency>
         <groupId>io.dapr</groupId>
         <artifactId>testcontainers-dapr</artifactId>
-        <version>${dapr.sdk.alpha.version}</version>
+        <version>${dapr.sdk.version}</version>
       </dependency>
       <dependency>
         <groupId>org.testcontainers</groupId>
@@ -365,7 +364,7 @@
       <dependency>
         <groupId>io.dapr</groupId>
         <artifactId>dapr-sdk-workflows</artifactId>
-        <version>${dapr.sdk.alpha.version}</version>
+        <version>${dapr.sdk.version}</version>
       </dependency>
       <dependency>
         <groupId>org.wiremock</groupId>
@@ -376,6 +375,14 @@
   </dependencyManagement>
 
   <build>
+    <extensions>
+      <extension>
+        <groupId>kr.motd.maven</groupId>
+        <artifactId>os-maven-plugin</artifactId>
+        <version>1.7.1</version>
+      </extension>
+    </extensions>
+
     <pluginManagement>
       <plugins>
         <plugin>
@@ -610,6 +617,7 @@
           <failOnWarnings>false</failOnWarnings>
           <failOnError>true</failOnError>
           <goal>site</goal>
+          <notimestamp>true</notimestamp>
           <excludePackageNames>io.dapr.examples:io.dapr.springboot:io.dapr.examples.*:io.dapr.springboot.*
           </excludePackageNames>
         </configuration>
@@ -657,7 +665,20 @@
       <id>integration-tests</id>
       <modules>
         <module>sdk-tests</module>
+        <module>spring-boot-examples</module>
       </modules>
+        <build>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <configuration>
+                        <skipTests>true</skipTests>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </build>
+
     </profile>
   </profiles>
 
