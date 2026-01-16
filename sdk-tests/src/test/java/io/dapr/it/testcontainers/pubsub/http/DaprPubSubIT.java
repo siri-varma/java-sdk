@@ -27,7 +27,6 @@ import io.dapr.client.domain.CloudEvent;
 import io.dapr.client.domain.HttpExtension;
 import io.dapr.client.domain.Metadata;
 import io.dapr.client.domain.PublishEventRequest;
-import io.dapr.it.pubsub.http.PubSubIT;
 import io.dapr.it.testcontainers.DaprClientFactory;
 import io.dapr.serializer.CustomizableObjectSerializer;
 import io.dapr.serializer.DaprObjectSerializer;
@@ -103,10 +102,10 @@ public class DaprPubSubIT {
   // typeRefs
   private static final TypeRef<List<CloudEvent>> CLOUD_EVENT_LIST_TYPE_REF = new TypeRef<>() {
   };
-  private static final TypeRef<List<CloudEvent<PubSubIT.ConvertToLong>>> CLOUD_EVENT_LONG_LIST_TYPE_REF =
+  private static final TypeRef<List<CloudEvent<ConvertToLong>>> CLOUD_EVENT_LONG_LIST_TYPE_REF =
       new TypeRef<>() {
       };
-  private static final TypeRef<List<CloudEvent<PubSubIT.MyObject>>> CLOUD_EVENT_MYOBJECT_LIST_TYPE_REF =
+  private static final TypeRef<List<CloudEvent<MyObject>>> CLOUD_EVENT_MYOBJECT_LIST_TYPE_REF =
       new TypeRef<>() {
       };
 
@@ -201,7 +200,7 @@ public class DaprPubSubIT {
       sendBulkMessagesAsText(client, ANOTHER_TOPIC_NAME);
 
       //Publishing an object.
-      PubSubIT.MyObject object = new PubSubIT.MyObject();
+      MyObject object = new MyObject();
       object.setId("123");
       client.publishEvent(PUBSUB_NAME, TOPIC_NAME, object).block();
       LOG.info("Published one object.");
@@ -323,7 +322,7 @@ public class DaprPubSubIT {
       callWithRetry(() -> {
         LOG.info("Checking results for topic " + TYPED_TOPIC_NAME);
 
-        List<CloudEvent<PubSubIT.MyObject>> messages = client.invokeMethod(
+        List<CloudEvent<MyObject>> messages = client.invokeMethod(
             PUBSUB_APP_ID,
             "messages/typedtestingtopic",
             null,
@@ -334,8 +333,8 @@ public class DaprPubSubIT {
         assertThat(messages)
             .extracting(CloudEvent::getData)
             .filteredOn(Objects::nonNull)
-            .filteredOn(PubSubIT.MyObject.class::isInstance)
-            .map(PubSubIT.MyObject::getId)
+            .filteredOn(MyObject.class::isInstance)
+            .map(MyObject::getId)
             .contains("123");
       }, 2000);
 
@@ -410,9 +409,9 @@ public class DaprPubSubIT {
   }
 
   private void publishMyObjectAsserting(DaprPreviewClient previewClient) {
-    PubSubIT.MyObject object = new PubSubIT.MyObject();
+    MyObject object = new MyObject();
     object.setId("123");
-    BulkPublishResponse<PubSubIT.MyObject> response = previewClient.publishEvents(
+    BulkPublishResponse<MyObject> response = previewClient.publishEvents(
         PUBSUB_NAME,
         TOPIC_BULK,
         "application/json",
@@ -544,19 +543,19 @@ public class DaprPubSubIT {
   public void testLongValues() throws Exception {
 
     Random random = new Random(590518626939830271L);
-    Set<PubSubIT.ConvertToLong> values = new HashSet<>();
-    values.add(new PubSubIT.ConvertToLong().setVal(590518626939830271L));
-    PubSubIT.ConvertToLong val;
+    Set<ConvertToLong> values = new HashSet<>();
+    values.add(new ConvertToLong().setVal(590518626939830271L));
+    ConvertToLong val;
     for (int i = 0; i < NUM_MESSAGES - 1; i++) {
       do {
-        val = new PubSubIT.ConvertToLong().setVal(random.nextLong());
+        val = new ConvertToLong().setVal(random.nextLong());
       } while (values.contains(val));
       values.add(val);
     }
-    Iterator<PubSubIT.ConvertToLong> valuesIt = values.iterator();
+    Iterator<ConvertToLong> valuesIt = values.iterator();
     try (DaprClient client = DaprClientFactory.createDaprClientBuilder(DAPR_CONTAINER).build()) {
       for (int i = 0; i < NUM_MESSAGES; i++) {
-        PubSubIT.ConvertToLong value = valuesIt.next();
+        ConvertToLong value = valuesIt.next();
         LOG.info("The long value sent " + value.getValue());
         //Publishing messages
         client.publishEvent(
@@ -575,17 +574,17 @@ public class DaprPubSubIT {
       }
     }
 
-    Set<PubSubIT.ConvertToLong> actual = new HashSet<>();
+    Set<ConvertToLong> actual = new HashSet<>();
     try (DaprClient client = DaprClientFactory.createDaprClientBuilder(DAPR_CONTAINER).build()) {
       callWithRetry(() -> {
         LOG.info("Checking results for topic " + LONG_TOPIC_NAME);
-        final List<CloudEvent<PubSubIT.ConvertToLong>> messages = client.invokeMethod(
+        final List<CloudEvent<ConvertToLong>> messages = client.invokeMethod(
             PUBSUB_APP_ID,
             "messages/testinglongvalues",
             null,
             HttpExtension.GET, CLOUD_EVENT_LONG_LIST_TYPE_REF).block();
         assertNotNull(messages);
-        for (CloudEvent<PubSubIT.ConvertToLong> message : messages) {
+        for (CloudEvent<ConvertToLong> message : messages) {
           actual.add(message.getData());
         }
         assertThat(values).containsAll(actual);
@@ -629,5 +628,49 @@ public class DaprPubSubIT {
         return "application/json";
       }
     };
+  }
+
+  /**
+   * A test object for pubsub tests.
+   */
+  public static class MyObject {
+    private String id;
+
+    public String getId() {
+      return this.id;
+    }
+
+    public void setId(String id) {
+      this.id = id;
+    }
+  }
+
+  /**
+   * A test object for long value conversion tests.
+   */
+  public static class ConvertToLong {
+    private Long value;
+
+    public ConvertToLong setVal(Long value) {
+      this.value = value;
+      return this;
+    }
+
+    public Long getValue() {
+      return value;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      ConvertToLong that = (ConvertToLong) o;
+      return Objects.equals(value, that.value);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(value);
+    }
   }
 }

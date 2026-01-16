@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 The Dapr Authors
+ * Copyright 2025 The Dapr Authors
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -11,71 +11,78 @@
 limitations under the License.
 */
 
-package io.dapr.it.pubsub.stream;
+package io.dapr.it.testcontainers.pubsub.stream;
 
 import io.dapr.client.DaprClient;
 import io.dapr.client.DaprPreviewClient;
 import io.dapr.client.SubscriptionListener;
 import io.dapr.client.domain.CloudEvent;
-import io.dapr.it.BaseIT;
-import io.dapr.it.DaprRun;
+import io.dapr.it.testcontainers.DaprClientFactory;
+import io.dapr.testcontainers.DaprContainer;
+import io.dapr.testcontainers.DaprLogLevel;
 import io.dapr.utils.TypeRef;
-import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testcontainers.containers.Network;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 import reactor.core.publisher.Mono;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 
 import static io.dapr.it.Retry.callWithRetry;
+import static io.dapr.it.testcontainers.ContainerConstants.DAPR_RUNTIME_IMAGE_TAG;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+/**
+ * PubSub Streaming Integration Test using Testcontainers.
+ * 
+ * This test validates the streaming subscription functionality of Dapr's pubsub
+ * using the DaprPreviewClient's subscribeToEvents method.
+ */
+@Testcontainers
+@Tag("testcontainers")
+public class DaprPubSubStreamIT {
 
-public class PubSubStreamIT extends BaseIT {
+  private static final Logger LOG = LoggerFactory.getLogger(DaprPubSubStreamIT.class);
 
   // Must be a large enough number, so we validate that we get more than the initial batch
   // sent by the runtime. When this was first added, the batch size in runtime was set to 10.
   private static final int NUM_MESSAGES = 100;
   private static final String TOPIC_NAME = "stream-topic";
-  private static final String PUBSUB_NAME = "messagebus";
+  private static final String PUBSUB_NAME = "pubsub";
 
-  private final List<DaprRun> runs = new ArrayList<>();
+  private static final Network DAPR_NETWORK = Network.newNetwork();
 
-  private DaprRun closeLater(DaprRun run) {
-    this.runs.add(run);
-    return run;
-  }
-
-  @AfterEach
-  public void tearDown() throws Exception {
-    for (DaprRun run : runs) {
-      run.stop();
-    }
-  }
+  @Container
+  private static final DaprContainer DAPR_CONTAINER = new DaprContainer(DAPR_RUNTIME_IMAGE_TAG)
+      .withAppName("pubsub-stream-dapr-app")
+      .withNetwork(DAPR_NETWORK)
+      .withDaprLogLevel(DaprLogLevel.DEBUG)
+      .withLogConsumer(outputFrame -> LOG.info(outputFrame.getUtf8String()));
 
   @Test
-  public void testPubSub() throws Exception {
-    final DaprRun daprRun = closeLater(startDaprApp(
-        this.getClass().getSimpleName(),
-        60000));
-
+  public void testPubSubStream() throws Exception {
     var runId = UUID.randomUUID().toString();
-    try (DaprClient client = daprRun.newDaprClient();
-         DaprPreviewClient previewClient = daprRun.newDaprPreviewClient()) {
+
+    try (DaprClient client = DaprClientFactory.createDaprClientBuilder(DAPR_CONTAINER).build();
+         DaprPreviewClient previewClient = DaprClientFactory.createDaprClientBuilder(DAPR_CONTAINER)
+             .buildPreviewClient()) {
+
+      // Publish messages
       for (int i = 0; i < NUM_MESSAGES; i++) {
         String message = String.format("This is message #%d on topic %s for run %s", i, TOPIC_NAME, runId);
-        //Publishing messages
         client.publishEvent(PUBSUB_NAME, TOPIC_NAME, message).block();
-        System.out.println(
-            String.format("Published message: '%s' to topic '%s' pubsub_name '%s'", message, TOPIC_NAME, PUBSUB_NAME));
+        LOG.info("Published message: '{}' to topic '{}' pubsub_name '{}'", message, TOPIC_NAME, PUBSUB_NAME);
       }
 
-      System.out.println("Starting subscription for " + TOPIC_NAME);
+      LOG.info("Starting subscription for {}", TOPIC_NAME);
 
       Set<String> messages = Collections.synchronizedSet(new HashSet<>());
       Set<String> errors = Collections.synchronizedSet(new HashSet<>());
@@ -108,13 +115,12 @@ public class PubSubStreamIT extends BaseIT {
         public void onError(RuntimeException exception) {
           errors.add(exception.getMessage());
         }
-
       };
-      try(var subscription = previewClient.subscribeToEvents(PUBSUB_NAME, TOPIC_NAME, listener, TypeRef.STRING)) {
+
+      try (var subscription = previewClient.subscribeToEvents(PUBSUB_NAME, TOPIC_NAME, listener, TypeRef.STRING)) {
         callWithRetry(() -> {
-          var messageCount =  messages.size();
-          System.out.println(
-              String.format("Got %d messages out of %d for topic %s.", messageCount, NUM_MESSAGES, TOPIC_NAME));
+          var messageCount = messages.size();
+          LOG.info("Got {} messages out of {} for topic {}.", messageCount, NUM_MESSAGES, TOPIC_NAME);
           assertEquals(NUM_MESSAGES, messages.size());
           assertEquals(4, errors.size());
         }, 120000); // Time for runtime to retry messages.
