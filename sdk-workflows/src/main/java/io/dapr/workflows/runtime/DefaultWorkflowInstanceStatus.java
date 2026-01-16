@@ -27,7 +27,9 @@ import java.time.Instant;
 /**
  * Represents a snapshot of a workflow instance's current state, including
  * metadata.
+ * @deprecated Use {@link DefaultWorkflowState} instead.
  */
+@Deprecated(forRemoval = true)
 public class DefaultWorkflowInstanceStatus implements WorkflowInstanceStatus {
 
   private final OrchestrationMetadata orchestrationMetadata;

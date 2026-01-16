@@ -8,22 +8,18 @@
     <groupId>io.dapr</groupId>
     <artifactId>dapr-sdk-parent</artifactId>
     <version>1.17.0-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
   </parent>
 
   <artifactId>dapr-sdk-tests</artifactId>
-  <version>1.17.0-SNAPSHOT</version>
   <name>dapr-sdk-tests</name>
   <description>Tests for Dapr's Java SDK - not to be published as a jar.</description>
 
   <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <java.version>17</java.version>
-    <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>
     <maven.deploy.skip>true</maven.deploy.skip>
-    <dapr.sdk.version>1.17.0-SNAPSHOT</dapr.sdk.version>
-    <dapr.sdk.alpha.version>0.17.0-SNAPSHOT</dapr.sdk.alpha.version>
     <protobuf.output.directory>${project.build.directory}/generated-sources</protobuf.output.directory>
     <protobuf.input.directory>${project.basedir}/proto</protobuf.input.directory>
 
@@ -34,15 +30,7 @@
   </properties>
 
   <dependencyManagement>
-    <!-- Reproduce a product fixing its own spring boot version -->
     <dependencies>
-      <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-dependencies</artifactId>
-        <version>${springboot.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
       <dependency>
         <groupId>org.junit.platform</groupId>
         <artifactId>junit-platform-commons</artifactId>
@@ -154,6 +142,11 @@
     <dependency>
       <groupId>org.testcontainers</groupId>
       <artifactId>junit-jupiter</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.dapr</groupId>
+      <artifactId>testcontainers-dapr</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.springframework.data</groupId>
@@ -269,7 +262,7 @@
       <plugin>
         <groupId>org.xolstice.maven.plugins</groupId>
         <artifactId>protobuf-maven-plugin</artifactId>
-        <version>0.6.1</version>
+        <version>${protobuf-maven-plugin.version}</version>
         <configuration>
           <protocArtifact>com.google.protobuf:protoc:${protobuf.version}:exe:${os.detected.classifier}</protocArtifact>
           <pluginId>grpc-java</pluginId>
@@ -288,7 +281,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
-        <version>3.2.0</version>
+        <version>${maven-jar-plugin.version}</version>
         <executions>
           <execution>
             <goals>
@@ -300,7 +293,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
-        <version>3.2.2</version>
+        <version>${failsafe.version}</version>
       </plugin>
     </plugins>
   </build>

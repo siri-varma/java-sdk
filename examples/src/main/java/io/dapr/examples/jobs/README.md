@@ -44,11 +44,27 @@ cd examples
 
 Run `dapr init` to initialize Dapr in Self-Hosted Mode if it's not already initialized.
 
+### App API Token Authentication (Optional)
+
+Dapr supports API token authentication to secure communication between Dapr and your application. When using the Jobs API, Dapr makes incoming calls to your app at job trigger time, and you can validate these requests using the `APP_API_TOKEN`.
+
+For detailed implementation with gRPC interceptors, see the [PubSub README App API Token Authentication section](../pubsub/README.md#app-api-token-authentication-optional).
+
+For more details, see the [Dapr App API Token Authentication documentation](https://docs.dapr.io/operations/security/app-api-token/).
+
+**Quick setup:**
+
+```bash
+# Export tokens before running the following `dapr run` commands.
+export APP_API_TOKEN="your-app-api-token"
+export DAPR_API_TOKEN="your-dapr-api-token"
+```
+
 ### Running the example
 
 This example uses the Java SDK Dapr client in order to **Schedule and Get** Jobs.
 `DemoJobsClient.java` is the example class demonstrating these features.
-Kindly check [DaprPreviewClient.java](https://github.com/dapr/java-sdk/blob/master/sdk/src/main/java/io/dapr/client/DaprPreviewClient.java) for a detailed description of the supported APIs.
+Kindly check [DaprClient.java](https://github.com/dapr/java-sdk/blob/master/sdk/src/main/java/io/dapr/client/DaprClient.java) for a detailed description of the supported APIs.
 
 ```java
 public class DemoJobsClient {
@@ -61,7 +77,7 @@ public class DemoJobsClient {
         Properties.GRPC_PORT, "51439"
     );
 
-    try (DaprPreviewClient client = new DaprClientBuilder().withPropertyOverrides(overrides).buildPreviewClient()) {
+    try (DaprClient client = new DaprClientBuilder().withPropertyOverrides(overrides).build()) {
 
       // Schedule a job.
       ScheduleJobRequest scheduleJobRequest = new ScheduleJobRequest("dapr-job-1",
